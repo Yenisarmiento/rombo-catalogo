@@ -479,30 +479,43 @@
     }
 
     const areaActual = asesorActual ? normalizarArea(asesorActual.area) : '';
-   let productosFiltrados = productos;
+    let productosFiltrados = productos;
 
-if (areaActual) {
-  productosFiltrados = productos.filter((p) => normalizarArea(p.area) === areaActual);
-}
-
-if (asesorActual) {
-  productosFiltrados = productosFiltrados.sort((a, b) => {
-    const aPuede = asesorActual.puntos >= a.puntos ? 1 : 0;
-    const bPuede = asesorActual.puntos >= b.puntos ? 1 : 0;
-
-    if (aPuede !== bPuede) {
-      return bPuede - aPuede; // primero los que sí puede redimir
+    if (areaActual) {
+      productosFiltrados = productos.filter((p) => normalizarArea(p.area) === areaActual);
     }
-
-    return a.puntos - b.puntos; // dentro del grupo, menor puntaje primero
-  });
-} else {
-  productosFiltrados = productosFiltrados.sort((a, b) => a.puntos - b.puntos);
-}
 
     if (!productosFiltrados.length) {
       cont.innerHTML = '<div class="empty">No hay productos configurados para esta área todavía.</div>';
       return;
+    }
+
+    if (asesorActual) {
+      const minPuntosArea = Math.min(...productosFiltrados.map((p) => p.puntos));
+      const puedeRedimirAlgo = productosFiltrados.some((p) => asesorActual.puntos >= p.puntos);
+
+      if (!puedeRedimirAlgo) {
+        cont.innerHTML = `
+          <div class="empty">
+            Aún no tienes puntos suficientes para redimir productos de tu área.<br><br>
+            <strong>Para redimir requieres mínimo ${format(minPuntosArea)} puntos.</strong>
+          </div>
+        `;
+        return;
+      }
+
+      productosFiltrados = productosFiltrados.sort((a, b) => {
+        const aPuede = asesorActual.puntos >= a.puntos ? 1 : 0;
+        const bPuede = asesorActual.puntos >= b.puntos ? 1 : 0;
+
+        if (aPuede !== bPuede) {
+          return bPuede - aPuede;
+        }
+
+        return a.puntos - b.puntos;
+      });
+    } else {
+      productosFiltrados = productosFiltrados.sort((a, b) => a.puntos - b.puntos);
     }
 
     cont.innerHTML = productosFiltrados.map((p) => {
@@ -510,7 +523,7 @@ if (asesorActual) {
 
       if (asesorActual) {
         if (asesorActual.puntos >= p.puntos) {
-          estado = '<span class="status ok">Disponible para redimir</span>';
+          estado = '<span class="status ok">✅ Disponible para redimir</span>';
         } else {
           estado = '<span class="status no">Te faltan ' + format(p.puntos - asesorActual.puntos) + ' pts</span>';
         }
