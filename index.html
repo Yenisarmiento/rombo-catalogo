@@ -479,11 +479,26 @@
     }
 
     const areaActual = asesorActual ? normalizarArea(asesorActual.area) : '';
-    let productosFiltrados = productos;
+   let productosFiltrados = productos;
 
-    if (areaActual) {
-      productosFiltrados = productos.filter((p) => normalizarArea(p.area) === areaActual);
+if (areaActual) {
+  productosFiltrados = productos.filter((p) => normalizarArea(p.area) === areaActual);
+}
+
+if (asesorActual) {
+  productosFiltrados = productosFiltrados.sort((a, b) => {
+    const aPuede = asesorActual.puntos >= a.puntos ? 1 : 0;
+    const bPuede = asesorActual.puntos >= b.puntos ? 1 : 0;
+
+    if (aPuede !== bPuede) {
+      return bPuede - aPuede; // primero los que sí puede redimir
     }
+
+    return a.puntos - b.puntos; // dentro del grupo, menor puntaje primero
+  });
+} else {
+  productosFiltrados = productosFiltrados.sort((a, b) => a.puntos - b.puntos);
+}
 
     if (!productosFiltrados.length) {
       cont.innerHTML = '<div class="empty">No hay productos configurados para esta área todavía.</div>';
