@@ -356,7 +356,10 @@
   }
 
   function format(valor) {
-    return new Intl.NumberFormat('es-CO').format(Number(valor || 0));
+    return new Intl.NumberFormat('es-CO', {
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0
+    }).format(Number(valor || 0));
   }
 
   function cargarDropdown() {
@@ -383,7 +386,7 @@
 
       if (!nombreAsesor) return;
 
-      const puntos = Number(row.PUNTOS || 0);
+      const puntos = Math.round(Number(row.PUNTOS || 0));
 
       const actual = mapa.get(nombreAsesor) || {
         nombre: nombreAsesor,
@@ -458,7 +461,7 @@
       .map((row) => ({
         area: normalizarTexto(row.Area || row.area),
         nombre: normalizarTexto(row.Porducto || row.Producto || row.producto),
-        puntos: Number(row['Puntos Requeridos'] || row.Puntos || row.puntos || 0),
+        puntos: Math.round(Number(row['Puntos Requeridos'] || row.Puntos || row.puntos || 0)),
         urlCompra: normalizarTexto(row['url para compra'] || row.url || ''),
         img: row["nombre del producto"] && String(row["nombre del producto"]).trim() !== ''
           ? "Img/" + String(row["nombre del producto"]).trim()
