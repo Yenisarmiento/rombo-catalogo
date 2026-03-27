@@ -100,7 +100,7 @@
       letter-spacing: 0.05em;
     }
 
-    button, input, select {
+    button, select {
       width: 100%;
       border-radius: 14px;
       border: 1px solid var(--border);
@@ -108,7 +108,7 @@
       font-size: 15px;
     }
 
-    select, input {
+    select {
       background: #fff;
       color: var(--text);
     }
@@ -121,14 +121,6 @@
       cursor: pointer;
       margin-top: 14px;
       box-shadow: 0 10px 22px rgba(0, 43, 127, 0.18);
-    }
-
-    .file-wrap {
-      border: 1px dashed var(--border);
-      background: #f9fbff;
-      border-radius: 16px;
-      padding: 14px;
-      margin-top: 10px;
     }
 
     #estadoCarga {
@@ -296,21 +288,11 @@
   <div class="layout">
     <aside class="box sidebar">
       <h2 class="section-title">Consulta de puntos</h2>
-      <p class="section-subtitle">Carga la base de liquidación y el catálogo. Luego selecciona el asesor para ver su acumulado y sus productos disponibles.</p>
+      <p class="section-subtitle">Selecciona tu nombre para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
 
-      <label class="mini-label">1. Cargar base de asesores</label>
-      <div class="file-wrap">
-        <input id="excelFile" type="file" accept=".xlsx,.xls" />
-      </div>
+      <p id="estadoCarga">Cargando información...</p>
 
-      <label class="mini-label">2. Cargar catálogo</label>
-      <div class="file-wrap">
-        <input id="catalogoFile" type="file" accept=".xlsx,.xls" />
-      </div>
-
-      <p id="estadoCarga">Carga ambos archivos Excel para iniciar.</p>
-
-      <label for="asesorSelect" class="mini-label">3. Selecciona el asesor</label>
+      <label for="asesorSelect" class="mini-label">Selecciona el asesor</label>
       <select id="asesorSelect">
         <option value="">-- Selecciona un asesor --</option>
       </select>
@@ -334,6 +316,9 @@
   let asesores = [];
   let asesorActual = null;
   let productos = [];
+
+  const ARCHIVO_ASESORES = 'Base Liquidacion Puntos Cohorte1_Comercial.xlsx';
+  const ARCHIVO_CATALOGO = 'Inventario de productos Catalogo.xlsx';
 
   function normalizarTexto(v) {
     return String(v || '').trim();
@@ -421,7 +406,6 @@
 
     asesores = Array.from(mapa.values());
     cargarDropdown();
-    actualizarEstado();
   }
 
   function obtenerImagen(nombreProducto) {
@@ -481,36 +465,13 @@
           : obtenerImagen(row.Porducto || row.Producto || row.producto)
       }))
       .filter((p) => p.area && p.nombre && p.puntos > 0);
-
-    actualizarEstado();
-    renderProductos();
-  }
-
-  function actualizarEstado() {
-    const estado = document.getElementById('estadoCarga');
-    const asesoresOk = asesores.length > 0;
-    const catalogoOk = productos.length > 0;
-
-    if (asesoresOk && catalogoOk) {
-      estado.style.color = '#16a34a';
-      estado.textContent = `Base cargada: ${asesores.length} asesores consolidados | Catálogo cargado: ${productos.length} productos`;
-    } else if (asesoresOk && !catalogoOk) {
-      estado.style.color = '#b45309';
-      estado.textContent = `Base cargada: ${asesores.length} asesores consolidados | Falta cargar el catálogo`;
-    } else if (!asesoresOk && catalogoOk) {
-      estado.style.color = '#b45309';
-      estado.textContent = `Catálogo cargado: ${productos.length} productos | Falta cargar la base de asesores`;
-    } else {
-      estado.style.color = '#64748b';
-      estado.textContent = 'Carga ambos archivos Excel para iniciar.';
-    }
   }
 
   function renderProductos() {
     const cont = document.getElementById('productos');
 
     if (!productos.length) {
-      cont.innerHTML = '<div class="empty">Carga el archivo del catálogo para visualizar los productos.</div>';
+      cont.innerHTML = '<div class="empty">Cargando catálogo...</div>';
       return;
     }
 
@@ -596,32 +557,45 @@
     renderProductos();
   }
 
-  document.getElementById('excelFile').addEventListener('change', async function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
+  async function cargarArchivoExcel(ruta) {
+    const response = await fetch(ruta);
+    if (!response.ok) {
+      throw new Error('No se pudo cargar: ' + ruta);
+    }
 
-    const data = await file.arrayBuffer();
+    const data = await response.arrayBuffer();
     const wb = XLSX.read(data, { type: 'array' });
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-    agruparAsesores(rows);
-  });
+    return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  }
 
-  document.getElementById('catalogoFile').addEventListener('change', async function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
+  async function cargarDatosIniciales() {
+    const estado = document.getElementById('estadoCarga');
 
-    const data = await file.arrayBuffer();
-    const wb = XLSX.read(data, { type: 'array' });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-    cargarCatalogo(rows);
-  });
+    try {
+      estado.style.color = '#64748b';
+      estado.textContent = 'Cargando asesores...';
+      const rowsAsesores = await cargarArchivoExcel(ARCHIVO_ASESORES);
+      agruparAsesores(rowsAsesores);
+
+      estado.textContent = 'Cargando catálogo...';
+      const rowsCatalogo = await cargarArchivoExcel(ARCHIVO_CATALOGO);
+      cargarCatalogo(rowsCatalogo);
+
+      estado.style.color = '#16a34a';
+      estado.textContent = 'Información cargada correctamente.';
+      renderProductos();
+    } catch (error) {
+      console.error(error);
+      estado.style.color = '#dc2626';
+      estado.textContent = 'No se pudo cargar la información. Verifica que los archivos estén en el repositorio.';
+    }
+  }
 
   document.getElementById('btnConsultar').addEventListener('click', buscar);
 
   renderProductos();
-  actualizarEstado();
+  cargarDatosIniciales();
 </script>
 </body>
 </html>
