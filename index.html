@@ -111,7 +111,6 @@
     input {
       background: #fff;
       color: var(--text);
-      outline-color: var(--primary-2);
     }
 
     button {
@@ -122,10 +121,6 @@
       cursor: pointer;
       margin-top: 14px;
       box-shadow: 0 10px 22px rgba(0, 43, 127, 0.18);
-    }
-
-    button:hover {
-        opacity: 0.9;
     }
 
     #estadoCarga {
@@ -298,8 +293,7 @@
       <p id="estadoCarga">Cargando información...</p>
 
       <label for="cedulaInput" class="mini-label">Número de Cédula</label>
-      <!-- Cambiamos el select por un input de texto -->
-      <input type="number" id="cedulaInput" placeholder="Escribe tu cédula aquí...">
+      <input type="text" id="cedulaInput" placeholder="Escribe tu cédula aquí...">
 
       <button id="btnConsultar" type="button">Consultar puntos</button>
 
@@ -366,8 +360,7 @@
     }).format(Number(valor || 0));
   }
 
-  // Ya no necesitamos cargarDropdown ya que no hay select,
-  // pero mantendremos la lógica de agrupación buscando la cédula.
+  // Ya no cargamos dropdown, pero agruparAsesores debe guardar la cédula
   function agruparAsesores(rows) {
     const mapa = new Map();
 
@@ -376,19 +369,16 @@
         row.Asesor || row.asesor || row.NOMBRE_ASESOR || row.nombre_asesor
       );
       
-      // Intentamos obtener la cédula de varias posibles columnas
+      // Capturamos el documento del Excel
       const cedulaAsesor = normalizarTexto(
         row.Cedula || row.cedula || row.CC || row.Documento || row.DOCUMENTO || row.id
       );
 
-      if (!nombreAsesor) return;
+      if (!nombreAsesor || !cedulaAsesor) return;
 
       const puntos = Math.round(Number(row.PUNTOS || 0));
 
-      // Usamos la cédula como llave o el nombre si no hay cédula
-      const llave = cedulaAsesor || nombreAsesor;
-
-      const actual = mapa.get(llave) || {
+      const actual = mapa.get(cedulaAsesor) || {
         nombre: nombreAsesor,
         cedula: cedulaAsesor,
         lider: row.Lider || row.lider || '',
@@ -405,7 +395,7 @@
       if (!actual.area && (row.Area || row['Área'] || row.area)) actual.area = row.Area || row['Área'] || row.area;
       if (!actual.cohorte && (row.Cohorte || row.cohorte)) actual.cohorte = row.Cohorte || row.cohorte;
 
-      mapa.set(llave, actual);
+      mapa.set(cedulaAsesor, actual);
     });
 
     asesores = Array.from(mapa.values());
@@ -542,20 +532,21 @@
     }).join('');
   }
 
+  // AQUÍ ESTÁ EL CAMBIO CLAVE EN LA FUNCIÓN BUSCAR
   function buscar() {
-    const cedulaDigitada = document.getElementById('cedulaInput').value.trim();
+    const cedulaIngresada = document.getElementById('cedulaInput').value.trim();
     const box = document.getElementById('resultado');
 
-    if (!cedulaDigitada) {
+    if (!cedulaIngresada) {
       asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty">Por favor, ingresa un número de cédula.</div>';
+      box.innerHTML = '<div class="empty">Escribe tu número de cédula para ver el consolidado de puntos.</div>';
       renderProductos();
       return;
     }
 
-    // Buscamos al asesor por su cédula
-    asesorActual = asesores.find((a) => a.cedula === cedulaDigitada);
+    // Buscamos coincidencia por cédula
+    asesorActual = asesores.find((a) => a.cedula === cedulaIngresada);
 
     if (asesorActual) {
       box.style.display = 'block';
@@ -582,9 +573,8 @@
         </div>
       `;
     } else {
-      asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty" style="color: var(--danger);">No encontramos información para la cédula ingresada.</div>';
+      box.innerHTML = '<div class="empty" style="color:red">No encontramos información para la cédula ingresada. Verifica el número.</div>';
     }
 
     renderProductos();
@@ -621,18 +611,11 @@
     } catch (error) {
       console.error(error);
       estado.style.color = '#dc2626';
-      estado.textContent = 'No se pudo cargar la información. Verifica que los archivos estén en el repositorio.';
+      estado.textContent = 'No se pudo cargar la información. Verifica los archivos Excel.';
     }
   }
 
   document.getElementById('btnConsultar').addEventListener('click', buscar);
-  
-  // Opcional: Buscar también al presionar "Enter" en el input
-  document.getElementById('cedulaInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      buscar();
-    }
-  });
 
   renderProductos();
   cargarDatosIniciales();
