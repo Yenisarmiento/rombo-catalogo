@@ -100,7 +100,7 @@
       letter-spacing: 0.05em;
     }
 
-    button, input {
+    button, select {
       width: 100%;
       border-radius: 14px;
       border: 1px solid var(--border);
@@ -108,10 +108,9 @@
       font-size: 15px;
     }
 
-    input {
+    select {
       background: #fff;
       color: var(--text);
-      outline-color: var(--primary-2);
     }
 
     button {
@@ -122,10 +121,6 @@
       cursor: pointer;
       margin-top: 14px;
       box-shadow: 0 10px 22px rgba(0, 43, 127, 0.18);
-    }
-
-    button:hover {
-        opacity: 0.9;
     }
 
     #estadoCarga {
@@ -293,13 +288,14 @@
   <div class="layout">
     <aside class="box sidebar">
       <h2 class="section-title">Consulta de puntos</h2>
-      <p class="section-subtitle">Ingresa el No de tu cc para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
+      <p class="section-subtitle">Selecciona tu nombre para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
 
       <p id="estadoCarga">Cargando información...</p>
 
-      <label for="cedulaInput" class="mini-label">Número de Cédula</label>
-      <!-- Cambiamos el select por un input de texto -->
-      <input type="number" id="cedulaInput" placeholder="Escribe tu cédula aquí...">
+      <label for="asesorSelect" class="mini-label">Selecciona el asesor</label>
+      <select id="asesorSelect">
+        <option value="">-- Selecciona un asesor --</option>
+      </select>
 
       <button id="btnConsultar" type="button">Consultar puntos</button>
 
@@ -360,14 +356,23 @@
   }
 
   function format(valor) {
-    return new Intl.NumberFormat('es-CO', {
-      maximumFractionDigits: 0,
-      minimumFractionDigits: 0
-    }).format(Number(valor || 0));
+    return new Intl.NumberFormat('es-CO').format(Number(valor || 0));
   }
 
-  // Ya no necesitamos cargarDropdown ya que no hay select,
-  // pero mantendremos la lógica de agrupación buscando la cédula.
+  function cargarDropdown() {
+    const select = document.getElementById('asesorSelect');
+    select.innerHTML = '<option value="">-- Selecciona un asesor --</option>';
+
+    asesores
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+      .forEach((asesor) => {
+        const option = document.createElement('option');
+        option.value = asesor.nombre;
+        option.textContent = asesor.nombre;
+        select.appendChild(option);
+      });
+  }
+
   function agruparAsesores(rows) {
     const mapa = new Map();
 
@@ -375,22 +380,13 @@
       const nombreAsesor = normalizarTexto(
         row.Asesor || row.asesor || row.NOMBRE_ASESOR || row.nombre_asesor
       );
-      
-      // Intentamos obtener la cédula de varias posibles columnas
-      const cedulaAsesor = normalizarTexto(
-        row.Cedula || row.cedula || row.CC || row.Documento || row.DOCUMENTO || row.id
-      );
 
       if (!nombreAsesor) return;
 
-      const puntos = Math.round(Number(row.PUNTOS || 0));
+      const puntos = Number(row.PUNTOS || 0);
 
-      // Usamos la cédula como llave o el nombre si no hay cédula
-      const llave = cedulaAsesor || nombreAsesor;
-
-      const actual = mapa.get(llave) || {
+      const actual = mapa.get(nombreAsesor) || {
         nombre: nombreAsesor,
-        cedula: cedulaAsesor,
         lider: row.Lider || row.lider || '',
         area: row.Area || row['Área'] || row.area || '',
         cohorte: row.Cohorte || row.cohorte || '',
@@ -405,10 +401,11 @@
       if (!actual.area && (row.Area || row['Área'] || row.area)) actual.area = row.Area || row['Área'] || row.area;
       if (!actual.cohorte && (row.Cohorte || row.cohorte)) actual.cohorte = row.Cohorte || row.cohorte;
 
-      mapa.set(llave, actual);
+      mapa.set(nombreAsesor, actual);
     });
 
     asesores = Array.from(mapa.values());
+    cargarDropdown();
   }
 
   function obtenerImagen(nombreProducto) {
@@ -461,7 +458,7 @@
       .map((row) => ({
         area: normalizarTexto(row.Area || row.area),
         nombre: normalizarTexto(row.Porducto || row.Producto || row.producto),
-        puntos: Math.round(Number(row['Puntos Requeridos'] || row.Puntos || row.puntos || 0)),
+        puntos: Number(row['Puntos Requeridos'] || row.Puntos || row.puntos || 0),
         urlCompra: normalizarTexto(row['url para compra'] || row.url || ''),
         img: row["nombre del producto"] && String(row["nombre del producto"]).trim() !== ''
           ? "Img/" + String(row["nombre del producto"]).trim()
@@ -490,40 +487,12 @@
       return;
     }
 
-    if (asesorActual) {
-      const minPuntosArea = Math.min(...productosFiltrados.map((p) => p.puntos));
-      const puedeRedimirAlgo = productosFiltrados.some((p) => asesorActual.puntos >= p.puntos);
-
-      if (!puedeRedimirAlgo) {
-        cont.innerHTML = `
-          <div class="empty">
-            Aún no tienes puntos suficientes para redimir productos de tu área.<br><br>
-            <strong>Para redimir requieres mínimo ${format(minPuntosArea)} puntos.</strong>
-          </div>
-        `;
-        return;
-      }
-
-      productosFiltrados = productosFiltrados.sort((a, b) => {
-        const aPuede = asesorActual.puntos >= a.puntos ? 1 : 0;
-        const bPuede = asesorActual.puntos >= b.puntos ? 1 : 0;
-
-        if (aPuede !== bPuede) {
-          return bPuede - aPuede;
-        }
-
-        return a.puntos - b.puntos;
-      });
-    } else {
-      productosFiltrados = productosFiltrados.sort((a, b) => a.puntos - b.puntos);
-    }
-
     cont.innerHTML = productosFiltrados.map((p) => {
-      let estado = '<span class="status no">Ingresa tu cédula para validar</span>';
+      let estado = '<span class="status no">Consulta un asesor para validar</span>';
 
       if (asesorActual) {
         if (asesorActual.puntos >= p.puntos) {
-          estado = '<span class="status ok">✅ Disponible para redimir</span>';
+          estado = '<span class="status ok">Disponible para redimir</span>';
         } else {
           estado = '<span class="status no">Te faltan ' + format(p.puntos - asesorActual.puntos) + ' pts</span>';
         }
@@ -543,19 +512,18 @@
   }
 
   function buscar() {
-    const cedulaDigitada = document.getElementById('cedulaInput').value.trim();
+    const nombreSeleccionado = document.getElementById('asesorSelect').value;
     const box = document.getElementById('resultado');
 
-    if (!cedulaDigitada) {
+    if (!nombreSeleccionado) {
       asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty">Por favor, ingresa un número de cédula.</div>';
+      box.innerHTML = '<div class="empty">Selecciona un asesor de la lista para ver el consolidado de puntos.</div>';
       renderProductos();
       return;
     }
 
-    // Buscamos al asesor por su cédula
-    asesorActual = asesores.find((a) => a.cedula === cedulaDigitada);
+    asesorActual = asesores.find((a) => a.nombre === nombreSeleccionado);
 
     if (asesorActual) {
       box.style.display = 'block';
@@ -582,9 +550,8 @@
         </div>
       `;
     } else {
-      asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty" style="color: var(--danger);">No encontramos información para la cédula ingresada.</div>';
+      box.innerHTML = '<div class="empty">No encontramos información para ese asesor.</div>';
     }
 
     renderProductos();
@@ -626,13 +593,6 @@
   }
 
   document.getElementById('btnConsultar').addEventListener('click', buscar);
-  
-  // Opcional: Buscar también al presionar "Enter" en el input
-  document.getElementById('cedulaInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      buscar();
-    }
-  });
 
   renderProductos();
   cargarDatosIniciales();
