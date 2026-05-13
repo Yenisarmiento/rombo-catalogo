@@ -1,214 +1,209 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rombo Incentivos</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <style>
-    :root {
-      --bg: #f3f6fb; --card: #ffffff; --text: #17305b; --muted: #64748b;
-      --primary: #002b7f; --primary-2: #3b82f6; --border: #d9e5f7;
-      --success: #16a34a; --danger: #dc2626; --shadow: 0 14px 40px rgba(14, 30, 77, 0.08);
-      --radius: 22px;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(180deg, #eef4ff 0%, #f7f9fc 100%); color: var(--text); padding: 28px; }
-    .page { max-width: 1180px; margin: 0 auto; }
-    .hero { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color: white; border-radius: 28px; padding: 34px 38px; box-shadow: var(--shadow); margin-bottom: 24px; }
-    .hero h1 { margin: 0 0 10px; font-size: 42px; line-height: 1.05; }
-    .hero p { margin: 0; font-size: 18px; opacity: 0.95; max-width: 760px; }
-    .layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
-    .box { background: var(--card); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
-    .sidebar { position: sticky; top: 20px; }
-    .mini-label { display: block; margin: 16px 0 8px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-    button, input { width: 100%; border-radius: 14px; border: 1px solid var(--border); padding: 13px 14px; font-size: 15px; }
-    button { border: none; background: linear-gradient(135deg, #002b7f 0%, #0f4ed8 100%); color: white; font-weight: 700; cursor: pointer; margin-top: 14px; }
-    #resultado { display: none; margin-top: 18px; background: #f7faff; border: 1px solid #d6e5ff; border-radius: 20px; padding: 18px; }
-    .result-name { font-size: 26px; font-weight: 700; }
-    .result-points { display: inline-flex; padding: 10px 14px; border-radius: 999px; background: #e7f7ee; color: var(--success); font-weight: 700; margin: 10px 0; }
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
-    .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; }
-    .stat-value { font-size: 16px; font-weight: 700; }
-    .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
-    .card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
-    .card img { width: 100%; height: 200px; object-fit: contain; background: #f8f9fa; padding: 10px; }
-    .card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-    .points { font-weight: 700; color: var(--primary-2); }
-    .status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-align: center; }
-    .ok { background: #e6fff2; color: var(--success); }
-    .no { background: #fff0f0; color: var(--danger); }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rombo Incentivos</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #f3f6fb; --card: #ffffff; --text: #17305b; --muted: #64748b;
+            --primary: #002b7f; --primary-2: #3b82f6; --border: #d9e5f7;
+            --success: #16a34a; --danger: #dc2626; --shadow: 0 14px 40px rgba(14, 30, 77, 0.08);
+            --radius: 22px;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(180deg, #eef4ff 0%, #f7f9fc 100%); color: var(--text); padding: 28px; }
+        .page { max-width: 1180px; margin: 0 auto; }
+        .hero { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color: white; border-radius: 28px; padding: 34px 38px; box-shadow: var(--shadow); margin-bottom: 24px; }
+        .hero h1 { margin: 0 0 10px; font-size: 42px; line-height: 1.05; }
+        .layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
+        .box { background: var(--card); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .sidebar { position: sticky; top: 20px; }
+        .mini-label { display: block; margin: 16px 0 8px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+        button, input { width: 100%; border-radius: 14px; border: 1px solid var(--border); padding: 13px 14px; font-size: 15px; }
+        input { background: #fff; color: var(--text); margin-bottom: 10px; }
+        button { border: none; background: linear-gradient(135deg, #002b7f 0%, #0f4ed8 100%); color: white; font-weight: 700; cursor: pointer; }
+        #resultado { display: none; margin-top: 18px; background: #f7faff; border: 1px solid #d6e5ff; border-radius: 20px; padding: 18px; }
+        .result-name { font-size: 26px; font-weight: 700; color: var(--primary); }
+        .result-points { display: inline-flex; padding: 10px 14px; border-radius: 999px; background: #e7f7ee; color: var(--success); font-weight: 700; margin: 10px 0; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+        .stat-value { font-size: 16px; font-weight: 700; }
+        .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+        .card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
+        .card img { width: 100%; height: 200px; object-fit: contain; background: #f8f9fa; padding: 10px; }
+        .card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .points { font-weight: 700; color: var(--primary-2); }
+        .status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-align: center; }
+        .ok { background: #e6fff2; color: var(--success); }
+        .no { background: #fff0f0; color: var(--danger); }
+    </style>
 </head>
 <body>
 <div class="page">
-  <section class="hero">
-    <h1>Plan de Incentivos Rombo</h1>
-    <p>Ingresa tu número de documento para consultar tus puntos acumulados.</p>
-  </section>
-
-  <div class="layout">
-    <aside class="box sidebar">
-      <h2>Consulta</h2>
-      <p id="estadoCarga">Cargando base de datos...</p>
-      <label class="mini-label">Número de Cédula</label>
-      <input type="text" id="cedulaInput" placeholder="Escribe aquí tu CC">
-      <button id="btnConsultar">Consultar ahora</button>
-      <div id="resultado"></div>
-    </aside>
-
-    <section class="box">
-      <div id="productos" class="products"></div>
+    <section class="hero">
+        <h1>Plan de Incentivos Rombo</h1>
+        <p>Escribe tu cédula para consultar tus puntos y productos disponibles.</p>
     </section>
-  </div>
+
+    <div class="layout">
+        <aside class="box sidebar">
+            <h2>Consulta</h2>
+            <p id="estadoCarga">Cargando base de datos...</p>
+            <label class="mini-label">Número de Cédula</label>
+            <input type="text" id="cedulaInput" placeholder="Escribe tu CC aquí">
+            <button id="btnConsultar">Buscar Asesor</button>
+            <div id="resultado"></div>
+        </aside>
+
+        <section class="box">
+            <div id="productos" class="products"></div>
+        </section>
+    </div>
 </div>
 
 <script>
-  let asesores = [];
-  let asesorActual = null;
-  let productos = [];
+    let asesores = [];
+    let asesorActual = null;
+    let productos = [];
 
-  const ARCHIVO_ASESORES = 'Base Liquidacion Puntos Cohorte1_Comercial.xlsx';
-  const ARCHIVO_CATALOGO = 'Inventario de productos Catalogo.xlsx';
+    const ARCHIVO_ASESORES = 'Base Liquidacion Puntos Cohorte1_Comercial.xlsx';
+    const ARCHIVO_CATALOGO = 'Inventario de productos Catalogo.xlsx';
 
-  function normalizarTexto(v) { return String(v || '').trim(); }
-  function limpiarNombre(v) { 
-    return String(v || '').toLowerCase().trim()
-      .replace(/[áä]/g, 'a').replace(/[éë]/g, 'e').replace(/[íï]/g, 'i').replace(/[óö]/g, 'o').replace(/[úü]/g, 'u')
-      .replace(/ñ/g, 'n').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
-  }
-  function format(v) { return new Intl.NumberFormat('es-CO').format(Math.round(v)); }
+    function normalizarTexto(v) { return String(v || '').trim(); }
+    function limpiarNombre(v) { 
+        return String(v || '').toLowerCase().trim()
+            .replace(/[áä]/g, 'a').replace(/[éë]/g, 'e').replace(/[íï]/g, 'i').replace(/[óö]/g, 'o').replace(/[úü]/g, 'u')
+            .replace(/ñ/g, 'n').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
+    }
+    function format(v) { return new Intl.NumberFormat('es-CO').format(Math.round(v)); }
 
-  function agruparAsesores(rows) {
-    const mapa = new Map();
-    rows.forEach(row => {
-      const cedula = normalizarTexto(row.Cedula || row.cedula || row.CC || row.Documento || row.DOCUMENTO);
-      if (!cedula) return;
-      
-      const puntos = parseFloat(row.PUNTOS || row.puntos || 0);
-      if (!mapa.has(cedula)) {
-        mapa.set(cedula, {
-          nombre: normalizarTexto(row.Asesor || row.asesor || row.NOMBRE_ASESOR),
-          cedula: cedula,
-          area: normalizarTexto(row.Area || row['Área'] || row.area),
-          lider: normalizarTexto(row.Lider || row.lider),
-          puntos: 0
+    function agruparAsesores(rows) {
+        const mapa = new Map();
+        rows.forEach(row => {
+            const cedula = normalizarTexto(row.Cedula || row.cedula || row.CC || row.Documento || row.DOCUMENTO);
+            if (!cedula) return;
+            const puntos = parseFloat(row.PUNTOS || row.puntos || 0);
+            if (!mapa.has(cedula)) {
+                mapa.set(cedula, {
+                    nombre: normalizarTexto(row.Asesor || row.asesor || row.NOMBRE_ASESOR),
+                    cedula: cedula,
+                    area: normalizarTexto(row.Area || row['Área'] || row.area),
+                    lider: normalizarTexto(row.Lider || row.lider),
+                    puntos: 0
+                });
+            }
+            mapa.get(cedula).puntos += isNaN(puntos) ? 0 : puntos;
         });
-      }
-      mapa.get(cedula).puntos += isNaN(puntos) ? 0 : puntos;
-    });
-    asesores = Array.from(mapa.values());
-  }
-
-  // AQUÍ ESTÁN TODAS TUS FOTOS CARGADAS NUEVAMENTE
-  function obtenerImagen(nombreProducto) {
-    const n = limpiarNombre(nombreProducto);
-    const mapa = [
-      { terms: ['morral', 'xtech', '209'], img: 'Img/morral-xtech-xtb-209.jpg' },
-      { terms: ['secador', 'gama', 'helios'], img: 'Img/secador-gama-helios.jpg' },
-      { terms: ['audifonos', 'xtech', 'tws'], img: 'Img/audifonos-xtech-tws.jpg' },
-      { terms: ['combo', 'universal', 'plancha', 'waflera'], img: 'Img/combo-universal-plancha-waflera.jpg' },
-      { terms: ['tostadora'], img: 'Img/tostadora.jpg' },
-      { terms: ['vajilla', 'corona', 'dinka'], img: 'Img/vajilla-corona-dinka.jpg' },
-      { terms: ['combo', 'electrolux', 'cafetera', 'ecm30'], img: 'Img/combo-electrolux-cafetera-exprimidor.jpg' },
-      { terms: ['combo', 'electrolux', 'cafetera', 'ecm25'], img: 'Img/combo-electrolux-cafetera-plancha.jpg' },
-      { terms: ['combo', 'electrolux', 'olla', 'ecc20'], img: 'Img/combo-electrolux-olla-hervidor.jpg' },
-      { terms: ['combo', 'imusa', 'arrocera', 'procesador'], img: 'Img/combo-imusa-arrocera-procesador.jpg' },
-      { terms: ['combo', 'oster', 'freidora', 'sanduchera'], img: 'Img/combo-oster-freidora-sanduchera.jpg' },
-      { terms: ['combo', 'universal', 'licuadora', 'sanduchera'], img: 'Img/combo-universal-licuadora-sanduchera-olla.jpg' },
-      { terms: ['audifonos', 'panasonic'], img: 'Img/audifonos-panasonic.jpg' },
-      { terms: ['audifonos', 'esenses'], img: 'Img/audifonos-esenses.jpg' },
-      { terms: ['mouse', 'esenses', 'inalambrico'], img: 'Img/mouse-esenses-inalambrico.jpg' },
-      { terms: ['mouse', 'esenses', 'alambrico'], img: 'Img/mouse-esenses-cable.jpg' },
-      { terms: ['reloj', 'esenses'], img: 'Img/reloj-esenses-audifonos.jpg' },
-      { terms: ['set', 'lanzadores'], img: 'Img/set-lanzadores.jpg' },
-      { terms: ['juego', 'tio', 'rico'], img: 'Img/juego-tio-rico.jpg' },
-      { terms: ['aspiradora', 'simoniz'], img: 'Img/aspiradora-simoniz.jpg' },
-      { terms: ['celular', 'kalley'], img: 'Img/celular-kalley.jpg' },
-      { terms: ['juego', 'uno'], img: 'Img/juego-uno.jpg' },
-      { terms: ['juego', 'stop'], img: 'Img/juego-stop.jpg' },
-      { terms: ['bicicleta', 'balance'], img: 'Img/bicicleta-balance-cheerway.jpg' },
-      { terms: ['monitor', 'kalley'], img: 'Img/monitor-kalley-22.jpg' },
-      { terms: ['rueda', 'abdominal'], img: 'Img/rueda-abdominal.jpg' },
-      { terms: ['cafetera', 'kalley'], img: 'Img/cafetera-kalley.jpg' },
-      { terms: ['sarten', 'free', 'home'], img: 'Img/sarten-free-home.jpg' },
-      { terms: ['spotify'], img: 'Img/spotify-1-mes.jpg' },
-      { terms: ['tarjeta', 'sodexo'], img: 'Img/tarjeta-sodexo.jpg' },
-      { terms: ['tarjeta', 'sodexho'], img: 'Img/tarjeta-sodexo.jpg' }
-    ];
-    for (const item of mapa) {
-      if (item.terms.every(t => n.includes(t))) return item.img;
+        asesores = Array.from(mapa.values());
     }
-    return 'Img/producto-base.jpg';
-  }
 
-  function cargarCatalogo(rows) {
-    productos = rows.map(row => ({
-      area: normalizarTexto(row.Area || row.area),
-      nombre: normalizarTexto(row.Producto || row.Porducto || row.producto),
-      puntos: parseFloat(row['Puntos Requeridos'] || row.Puntos || 0),
-      img: row["nombre del producto"] ? "Img/" + String(row["nombre del producto"]).trim() : obtenerImagen(row.Producto || row.Porducto || row.producto)
-    })).filter(p => p.nombre && p.puntos > 0);
-  }
-
-  function renderProductos() {
-    const cont = document.getElementById('productos');
-    const areaA = asesorActual ? asesorActual.area.toUpperCase() : '';
-    const filtrados = areaA ? productos.filter(p => p.area.toUpperCase() === areaA) : productos;
-
-    cont.innerHTML = filtrados.map(p => `
-      <div class="card">
-        <img src="${p.img}" onerror="this.src='Img/producto-base.jpg'">
-        <div class="card-body">
-          <h3>${p.nombre}</h3>
-          <div class="points">${format(p.puntos)} pts</div>
-          ${asesorActual ? (asesorActual.puntos >= p.puntos ? '<div class="status ok">✅ Disponible</div>' : `<div class="status no">Faltan ${format(p.puntos - asesorActual.puntos)} pts</div>`) : ''}
-        </div>
-      </div>`).join('');
-  }
-
-  function buscar() {
-    const val = normalizarTexto(document.getElementById('cedulaInput').value);
-    const res = document.getElementById('resultado');
-    asesorActual = asesores.find(a => a.cedula === val);
-
-    if (asesorActual) {
-      res.style.display = 'block';
-      res.innerHTML = `
-        <div class="result-name">${asesorActual.nombre}</div>
-        <div class="result-points">${format(asesorActual.puntos)} Puntos</div>
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-label">Área</div><div class="stat-value">${asesorActual.area}</div></div>
-          <div class="stat-card"><div class="stat-label">Líder</div><div class="stat-value">${asesorActual.lider}</div></div>
-        </div>`;
-    } else {
-      res.style.display = 'block';
-      res.innerHTML = '<p style="color:red">Cédula no encontrada.</p>';
-      asesorActual = null;
+    // AQUÍ ESTÁN TODAS TUS REGLAS DE IMÁGENES COMPLETAS
+    function obtenerImagen(nombreProducto) {
+        const n = limpiarNombre(nombreProducto);
+        const mapa = [
+            { terms: ['morral', 'xtech', '209'], img: 'Img/morral-xtech-xtb-209.jpg' },
+            { terms: ['secador', 'gama', 'helios'], img: 'Img/secador-gama-helios.jpg' },
+            { terms: ['audifonos', 'xtech', 'tws'], img: 'Img/audifonos-xtech-tws.jpg' },
+            { terms: ['combo', 'universal', 'plancha', 'waflera'], img: 'Img/combo-universal-plancha-waflera.jpg' },
+            { terms: ['tostadora'], img: 'Img/tostadora.jpg' },
+            { terms: ['vajilla', 'corona', 'dinka'], img: 'Img/vajilla-corona-dinka.jpg' },
+            { terms: ['combo', 'electrolux', 'cafetera', 'ecm30'], img: 'Img/combo-electrolux-cafetera-exprimidor.jpg' },
+            { terms: ['combo', 'electrolux', 'cafetera', 'ecm25'], img: 'Img/combo-electrolux-cafetera-plancha.jpg' },
+            { terms: ['combo', 'electrolux', 'olla', 'ecc20'], img: 'Img/combo-electrolux-olla-hervidor.jpg' },
+            { terms: ['combo', 'imusa', 'arrocera', 'procesador'], img: 'Img/combo-imusa-arrocera-procesador.jpg' },
+            { terms: ['combo', 'oster', 'freidora', 'sanduchera'], img: 'Img/combo-oster-freidora-sanduchera.jpg' },
+            { terms: ['combo', 'universal', 'licuadora', 'sanduchera'], img: 'Img/combo-universal-licuadora-sanduchera-olla.jpg' },
+            { terms: ['audifonos', 'panasonic'], img: 'Img/audifonos-panasonic.jpg' },
+            { terms: ['audifonos', 'esenses'], img: 'Img/audifonos-esenses.jpg' },
+            { terms: ['mouse', 'esenses', 'inalambrico'], img: 'Img/mouse-esenses-inalambrico.jpg' },
+            { terms: ['mouse', 'esenses', 'alambrico'], img: 'Img/mouse-esenses-cable.jpg' },
+            { terms: ['reloj', 'esenses'], img: 'Img/reloj-esenses-audifonos.jpg' },
+            { terms: ['set', 'lanzadores'], img: 'Img/set-lanzadores.jpg' },
+            { terms: ['juego', 'tio', 'rico'], img: 'Img/juego-tio-rico.jpg' },
+            { terms: ['aspiradora', 'simoniz'], img: 'Img/aspiradora-simoniz.jpg' },
+            { terms: ['celular', 'kalley'], img: 'Img/celular-kalley.jpg' },
+            { terms: ['juego', 'uno'], img: 'Img/juego-uno.jpg' },
+            { terms: ['juego', 'stop'], img: 'Img/juego-stop.jpg' },
+            { terms: ['bicicleta', 'balance'], img: 'Img/bicicleta-balance-cheerway.jpg' },
+            { terms: ['monitor', 'kalley'], img: 'Img/monitor-kalley-22.jpg' },
+            { terms: ['rueda', 'abdominal'], img: 'Img/rueda-abdominal.jpg' },
+            { terms: ['cafetera', 'kalley'], img: 'Img/cafetera-kalley.jpg' },
+            { terms: ['sarten', 'free', 'home'], img: 'Img/sarten-free-home.jpg' },
+            { terms: ['spotify'], img: 'Img/spotify-1-mes.jpg' },
+            { terms: ['tarjeta', 'sodexo'], img: 'Img/tarjeta-sodexo.jpg' },
+            { terms: ['tarjeta', 'sodexho'], img: 'Img/tarjeta-sodexo.jpg' }
+        ];
+        for (const item of mapa) {
+            if (item.terms.every(t => n.includes(t))) return item.img;
+        }
+        return 'Img/producto-base.jpg';
     }
-    renderProductos();
-  }
 
-  async function init() {
-    try {
-      const respA = await fetch(ARCHIVO_ASESORES);
-      const dataA = await respA.arrayBuffer();
-      agruparAsesores(XLSX.utils.sheet_to_json(XLSX.read(dataA, {type:'array'}).Sheets[0]));
-
-      const respC = await fetch(ARCHIVO_CATALOGO);
-      const dataC = await respC.arrayBuffer();
-      cargarCatalogo(XLSX.utils.sheet_to_json(XLSX.read(dataC, {type:'array'}).Sheets[0]));
-
-      document.getElementById('estadoCarga').textContent = '✅ Sistema listo';
-      renderProductos();
-    } catch (e) {
-      document.getElementById('estadoCarga').textContent = '❌ Error al cargar archivos';
+    function cargarCatalogo(rows) {
+        productos = rows.map(row => ({
+            area: normalizarTexto(row.Area || row.area),
+            nombre: normalizarTexto(row.Producto || row.Porducto || row.producto),
+            puntos: parseFloat(row['Puntos Requeridos'] || row.Puntos || 0),
+            img: row["nombre del producto"] ? "Img/" + String(row["nombre del producto"]).trim() : obtenerImagen(row.Producto || row.Porducto || row.producto)
+        })).filter(p => p.nombre && p.puntos > 0);
     }
-  }
 
-  document.getElementById('btnConsultar').addEventListener('click', buscar);
-  init();
+    function renderProductos() {
+        const cont = document.getElementById('productos');
+        const areaA = asesorActual ? asesorActual.area.toUpperCase() : '';
+        const filtrados = areaA ? productos.filter(p => p.area.toUpperCase() === areaA) : productos;
+        cont.innerHTML = filtrados.map(p => `
+            <div class="card">
+                <img src="${p.img}" onerror="this.src='Img/producto-base.jpg'">
+                <div class="card-body">
+                    <h3>${p.nombre}</h3>
+                    <div class="points">${format(p.puntos)} pts</div>
+                    ${asesorActual ? (asesorActual.puntos >= p.puntos ? '<div class="status ok">✅ Disponible</div>' : `<div class="status no">Faltan ${format(p.puntos - asesorActual.puntos)} pts</div>`) : ''}
+                </div>
+            </div>`).join('');
+    }
+
+    function buscar() {
+        const val = normalizarTexto(document.getElementById('cedulaInput').value);
+        const res = document.getElementById('resultado');
+        asesorActual = asesores.find(a => a.cedula === val);
+        if (asesorActual) {
+            res.style.display = 'block';
+            res.innerHTML = `
+                <div class="result-name">${asesorActual.nombre}</div>
+                <div class="result-points">${format(asesorActual.puntos)} Puntos</div>
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-label">Área</div><div class="stat-value">${asesorActual.area}</div></div>
+                    <div class="stat-card"><div class="stat-label">Líder</div><div class="stat-value">${asesorActual.lider}</div></div>
+                </div>`;
+        } else {
+            res.style.display = 'block';
+            res.innerHTML = '<p style="color:red">Cédula no encontrada.</p>';
+            asesorActual = null;
+        }
+        renderProductos();
+    }
+
+    async function init() {
+        try {
+            const respA = await fetch(ARCHIVO_ASESORES);
+            const dataA = await respA.arrayBuffer();
+            agruparAsesores(XLSX.utils.sheet_to_json(XLSX.read(dataA, {type:'array'}).Sheets[0]));
+            const respC = await fetch(ARCHIVO_CATALOGO);
+            const dataC = await respC.arrayBuffer();
+            cargarCatalogo(XLSX.utils.sheet_to_json(XLSX.read(dataC, {type:'array'}).Sheets[0]));
+            document.getElementById('estadoCarga').textContent = '✅ Sistema listo';
+            renderProductos();
+        } catch (e) {
+            document.getElementById('estadoCarga').textContent = '❌ Error al cargar archivos';
+        }
+    }
+
+    document.getElementById('btnConsultar').addEventListener('click', buscar);
+    init();
 </script>
 </body>
 </html>
