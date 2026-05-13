@@ -1,209 +1,641 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rombo Incentivos</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <style>
-        :root {
-            --bg: #f3f6fb; --card: #ffffff; --text: #17305b; --muted: #64748b;
-            --primary: #002b7f; --primary-2: #3b82f6; --border: #d9e5f7;
-            --success: #16a34a; --danger: #dc2626; --shadow: 0 14px 40px rgba(14, 30, 77, 0.08);
-            --radius: 22px;
-        }
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: Arial, sans-serif; background: linear-gradient(180deg, #eef4ff 0%, #f7f9fc 100%); color: var(--text); padding: 28px; }
-        .page { max-width: 1180px; margin: 0 auto; }
-        .hero { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%); color: white; border-radius: 28px; padding: 34px 38px; box-shadow: var(--shadow); margin-bottom: 24px; }
-        .hero h1 { margin: 0 0 10px; font-size: 42px; line-height: 1.05; }
-        .layout { display: grid; grid-template-columns: 380px 1fr; gap: 24px; align-items: start; }
-        .box { background: var(--card); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
-        .sidebar { position: sticky; top: 20px; }
-        .mini-label { display: block; margin: 16px 0 8px; font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
-        button, input { width: 100%; border-radius: 14px; border: 1px solid var(--border); padding: 13px 14px; font-size: 15px; }
-        input { background: #fff; color: var(--text); margin-bottom: 10px; }
-        button { border: none; background: linear-gradient(135deg, #002b7f 0%, #0f4ed8 100%); color: white; font-weight: 700; cursor: pointer; }
-        #resultado { display: none; margin-top: 18px; background: #f7faff; border: 1px solid #d6e5ff; border-radius: 20px; padding: 18px; }
-        .result-name { font-size: 26px; font-weight: 700; color: var(--primary); }
-        .result-points { display: inline-flex; padding: 10px 14px; border-radius: 999px; background: #e7f7ee; color: var(--success); font-weight: 700; margin: 10px 0; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
-        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; }
-        .stat-value { font-size: 16px; font-weight: 700; }
-        .products { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
-        .card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); display: flex; flex-direction: column; }
-        .card img { width: 100%; height: 200px; object-fit: contain; background: #f8f9fa; padding: 10px; }
-        .card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-        .points { font-weight: 700; color: var(--primary-2); }
-        .status { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-align: center; }
-        .ok { background: #e6fff2; color: var(--success); }
-        .no { background: #fff0f0; color: var(--danger); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rombo Incentivos</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #17305b;
+      --muted: #64748b;
+      --primary: #002b7f;
+      --primary-2: #3b82f6;
+      --border: #d9e5f7;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --shadow: 0 14px 40px rgba(14, 30, 77, 0.08);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #eef4ff 0%, #f7f9fc 100%);
+      color: var(--text);
+      padding: 28px;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+      color: white;
+      border-radius: 28px;
+      padding: 34px 38px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 42px;
+      line-height: 1.05;
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 18px;
+      opacity: 0.95;
+      max-width: 760px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .box {
+      background: var(--card);
+      padding: 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 20px;
+    }
+
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.1;
+    }
+
+    .section-subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .mini-label {
+      display: block;
+      margin: 16px 0 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    button, input {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 13px 14px;
+      font-size: 15px;
+    }
+
+    input {
+      background: #fff;
+      color: var(--text);
+      outline-color: var(--primary-2);
+    }
+
+    button {
+      border: none;
+      background: linear-gradient(135deg, #002b7f 0%, #0f4ed8 100%);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 14px;
+      box-shadow: 0 10px 22px rgba(0, 43, 127, 0.18);
+    }
+
+    button:hover {
+        opacity: 0.9;
+    }
+
+    #estadoCarga {
+      margin: 12px 0 0;
+      font-size: 14px;
+      color: var(--success);
+      line-height: 1.5;
+    }
+
+    #resultado {
+      display: none;
+      margin-top: 18px;
+      background: linear-gradient(180deg, #f7faff 0%, #eff5ff 100%);
+      border: 1px solid #d6e5ff;
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .result-name {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+
+    .result-points {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #e7f7ee;
+      color: var(--success);
+      font-weight: 700;
+      margin: 12px 0 16px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .catalog-header {
+      margin-bottom: 20px;
+    }
+
+    .catalog-header h2 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .catalog-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 24px rgba(20, 48, 91, 0.06);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    .card img {
+      width: 100%;
+      height: 220px;
+      object-fit: contain;
+      background: #eef3fb;
+      padding: 12px;
+    }
+
+    .card-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .product-title {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .points {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #ebf2ff;
+      color: var(--primary-2);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: auto;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      display: inline-block;
+      font-weight: 700;
+    }
+
+    .ok { background: #e6fff2; color: var(--success); }
+    .no { background: #fff0f0; color: var(--danger); }
+
+    .empty {
+      background: #fbfdff;
+      border: 1px dashed var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+      .hero h1 { font-size: 34px; }
+    }
+  </style>
 </head>
 <body>
 <div class="page">
-    <section class="hero">
-        <h1>Plan de Incentivos Rombo</h1>
-        <p>Escribe tu cédula para consultar tus puntos y productos disponibles.</p>
+  <section class="hero">
+    <h1>Plan de Incentivos Rombo</h1>
+    <p>Consulta los puntos acumulados por asesor y compara su saldo frente al catálogo de redención de su área.</p>
+  </section>
+
+  <div class="layout">
+    <aside class="box sidebar">
+      <h2 class="section-title">Consulta de puntos</h2>
+      <p class="section-subtitle">Ingresa el No de tu cc para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
+
+      <p id="estadoCarga">Cargando información...</p>
+
+      <label for="cedulaInput" class="mini-label">Número de Cédula</label>
+      <!-- Cambiamos el select por un input de texto -->
+      <input type="number" id="cedulaInput" placeholder="Escribe tu cédula aquí...">
+
+      <button id="btnConsultar" type="button">Consultar puntos</button>
+
+      <div id="resultado"></div>
+    </aside>
+
+    <section class="box">
+      <div class="catalog-header">
+        <h2>Catálogo de redención</h2>
+        <p>Catálogo marca blanca filtrado automáticamente según el área del asesor.</p>
+      </div>
+      <div id="productos" class="products"></div>
     </section>
-
-    <div class="layout">
-        <aside class="box sidebar">
-            <h2>Consulta</h2>
-            <p id="estadoCarga">Cargando base de datos...</p>
-            <label class="mini-label">Número de Cédula</label>
-            <input type="text" id="cedulaInput" placeholder="Escribe tu CC aquí">
-            <button id="btnConsultar">Buscar Asesor</button>
-            <div id="resultado"></div>
-        </aside>
-
-        <section class="box">
-            <div id="productos" class="products"></div>
-        </section>
-    </div>
+  </div>
 </div>
 
 <script>
-    let asesores = [];
-    let asesorActual = null;
-    let productos = [];
+  let asesores = [];
+  let asesorActual = null;
+  let productos = [];
 
-    const ARCHIVO_ASESORES = 'Base Liquidacion Puntos Cohorte1_Comercial.xlsx';
-    const ARCHIVO_CATALOGO = 'Inventario de productos Catalogo.xlsx';
+  const ARCHIVO_ASESORES = 'Base Liquidacion Puntos Cohorte1_Comercial.xlsx';
+  const ARCHIVO_CATALOGO = 'Inventario de productos Catalogo.xlsx';
 
-    function normalizarTexto(v) { return String(v || '').trim(); }
-    function limpiarNombre(v) { 
-        return String(v || '').toLowerCase().trim()
-            .replace(/[áä]/g, 'a').replace(/[éë]/g, 'e').replace(/[íï]/g, 'i').replace(/[óö]/g, 'o').replace(/[úü]/g, 'u')
-            .replace(/ñ/g, 'n').replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ');
+  function normalizarTexto(v) {
+    return String(v || '').trim();
+  }
+
+  function normalizarArea(v) {
+    return String(v || '')
+      .trim()
+      .toUpperCase()
+      .replace(/Á/g, 'A')
+      .replace(/É/g, 'E')
+      .replace(/Í/g, 'I')
+      .replace(/Ó/g, 'O')
+      .replace(/Ú/g, 'U');
+  }
+
+  function limpiarNombre(v) {
+    return String(v || '')
+      .toLowerCase()
+      .trim()
+      .replace(/á/g, 'a')
+      .replace(/é/g, 'e')
+      .replace(/í/g, 'i')
+      .replace(/ó/g, 'o')
+      .replace(/ú/g, 'u')
+      .replace(/ñ/g, 'n')
+      .replace(/["']/g, '')
+      .replace(/\+/g, ' ')
+      .replace(/\./g, ' ')
+      .replace(/,/g, ' ')
+      .replace(/-/g, ' ')
+      .replace(/[^a-z0-9 ]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function format(valor) {
+    return new Intl.NumberFormat('es-CO', {
+      maximumFractionDigits: 0,
+      minimumFractionDigits: 0
+    }).format(Number(valor || 0));
+  }
+
+  // Ya no necesitamos cargarDropdown ya que no hay select,
+  // pero mantendremos la lógica de agrupación buscando la cédula.
+  function agruparAsesores(rows) {
+    const mapa = new Map();
+
+    rows.forEach((row) => {
+      const nombreAsesor = normalizarTexto(
+        row.Asesor || row.asesor || row.NOMBRE_ASESOR || row.nombre_asesor
+      );
+      
+      // Intentamos obtener la cédula de varias posibles columnas
+      const cedulaAsesor = normalizarTexto(
+        row.Cedula || row.cedula || row.CC || row.Documento || row.DOCUMENTO || row.id
+      );
+
+      if (!nombreAsesor) return;
+
+      const puntos = Math.round(Number(row.PUNTOS || 0));
+
+      // Usamos la cédula como llave o el nombre si no hay cédula
+      const llave = cedulaAsesor || nombreAsesor;
+
+      const actual = mapa.get(llave) || {
+        nombre: nombreAsesor,
+        cedula: cedulaAsesor,
+        lider: row.Lider || row.lider || '',
+        area: row.Area || row['Área'] || row.area || '',
+        cohorte: row.Cohorte || row.cohorte || '',
+        puntos: 0,
+        registros: 0
+      };
+
+      actual.puntos += isNaN(puntos) ? 0 : puntos;
+      actual.registros += 1;
+
+      if (!actual.lider && (row.Lider || row.lider)) actual.lider = row.Lider || row.lider;
+      if (!actual.area && (row.Area || row['Área'] || row.area)) actual.area = row.Area || row['Área'] || row.area;
+      if (!actual.cohorte && (row.Cohorte || row.cohorte)) actual.cohorte = row.Cohorte || row.cohorte;
+
+      mapa.set(llave, actual);
+    });
+
+    asesores = Array.from(mapa.values());
+  }
+
+  function obtenerImagen(nombreProducto) {
+    const nombre = limpiarNombre(nombreProducto);
+
+    const mapa = [
+      { terms: ['morral', 'xtech', 'xtb', '209'], img: 'Img/morral-xtech-xtb-209.jpg' },
+      { terms: ['secador', 'gama', 'helios'], img: 'Img/secador-gama-helios.jpg' },
+      { terms: ['audifonos', 'xtech', 'tws'], img: 'Img/audifonos-xtech-tws.jpg' },
+      { terms: ['combo', 'universal', 'plancha', 'waflera'], img: 'Img/combo-universal-plancha-waflera.jpg' },
+      { terms: ['tostadora'], img: 'Img/tostadora.jpg' },
+      { terms: ['vajilla', 'corona', 'dinka'], img: 'Img/vajilla-corona-dinka.jpg' },
+      { terms: ['combo', 'electrolux', 'cafetera', 'ecm30', 'exprimidor'], img: 'Img/combo-electrolux-cafetera-exprimidor.jpg' },
+      { terms: ['combo', 'electrolux', 'cafetera', 'ecm25', 'plancha'], img: 'Img/combo-electrolux-cafetera-plancha.jpg' },
+      { terms: ['combo', 'electrolux', 'olla', 'arrocera', 'ecc20', 'hervidor'], img: 'Img/combo-electrolux-olla-hervidor.jpg' },
+      { terms: ['combo', 'imusa', 'arrocera', 'procesador'], img: 'Img/combo-imusa-arrocera-procesador.jpg' },
+      { terms: ['combo', 'oster', 'freidora', 'sanduchera'], img: 'Img/combo-oster-freidora-sanduchera.jpg' },
+      { terms: ['combo', 'universal', 'licuadora', 'sanduchera', 'olla'], img: 'Img/combo-universal-licuadora-sanduchera-olla.jpg' },
+      { terms: ['audifonos', 'panasonic'], img: 'Img/audifonos-panasonic.jpg' },
+      { terms: ['audifonos', 'esenses'], img: 'Img/audifonos-esenses.jpg' },
+      { terms: ['mouse', 'esenses', 'inalambrico'], img: 'Img/mouse-esenses-inalambrico.jpg' },
+      { terms: ['mouse', 'esenses', 'alambrico'], img: 'Img/mouse-esenses-cable.jpg' },
+      { terms: ['reloj', 'esenses'], img: 'Img/reloj-esenses-audifonos.jpg' },
+      { terms: ['set', 'lanzadores'], img: 'Img/set-lanzadores.jpg' },
+      { terms: ['juego', 'tio', 'rico'], img: 'Img/juego-tio-rico.jpg' },
+      { terms: ['aspiradora', 'simoniz'], img: 'Img/aspiradora-simoniz.jpg' },
+      { terms: ['celular', 'kalley'], img: 'Img/celular-kalley.jpg' },
+      { terms: ['juego', 'uno'], img: 'Img/juego-uno.jpg' },
+      { terms: ['juego', 'stop'], img: 'Img/juego-stop.jpg' },
+      { terms: ['bicicleta', 'balance', 'cheerway'], img: 'Img/bicicleta-balance-cheerway.jpg' },
+      { terms: ['monitor', 'kalley', '22'], img: 'Img/monitor-kalley-22.jpg' },
+      { terms: ['rueda', 'abdominal'], img: 'Img/rueda-abdominal.jpg' },
+      { terms: ['cafetera', 'kalley'], img: 'Img/cafetera-kalley.jpg' },
+      { terms: ['sarten', 'free', 'home'], img: 'Img/sarten-free-home.jpg' },
+      { terms: ['spotify'], img: 'Img/spotify-1-mes.jpg' },
+      { terms: ['tarjeta', 'sodexo'], img: 'Img/tarjeta-sodexo.jpg' },
+      { terms: ['tarjeta', 'sodexho'], img: 'Img/tarjeta-sodexo.jpg' }
+    ];
+
+    for (const item of mapa) {
+      const coincide = item.terms.every((term) => nombre.includes(term));
+      if (coincide) return item.img;
     }
-    function format(v) { return new Intl.NumberFormat('es-CO').format(Math.round(v)); }
 
-    function agruparAsesores(rows) {
-        const mapa = new Map();
-        rows.forEach(row => {
-            const cedula = normalizarTexto(row.Cedula || row.cedula || row.CC || row.Documento || row.DOCUMENTO);
-            if (!cedula) return;
-            const puntos = parseFloat(row.PUNTOS || row.puntos || 0);
-            if (!mapa.has(cedula)) {
-                mapa.set(cedula, {
-                    nombre: normalizarTexto(row.Asesor || row.asesor || row.NOMBRE_ASESOR),
-                    cedula: cedula,
-                    area: normalizarTexto(row.Area || row['Área'] || row.area),
-                    lider: normalizarTexto(row.Lider || row.lider),
-                    puntos: 0
-                });
-            }
-            mapa.get(cedula).puntos += isNaN(puntos) ? 0 : puntos;
-        });
-        asesores = Array.from(mapa.values());
+    return 'Img/producto-base.jpg';
+  }
+
+  function cargarCatalogo(rows) {
+    productos = rows
+      .map((row) => ({
+        area: normalizarTexto(row.Area || row.area),
+        nombre: normalizarTexto(row.Porducto || row.Producto || row.producto),
+        puntos: Math.round(Number(row['Puntos Requeridos'] || row.Puntos || row.puntos || 0)),
+        urlCompra: normalizarTexto(row['url para compra'] || row.url || ''),
+        img: row["nombre del producto"] && String(row["nombre del producto"]).trim() !== ''
+          ? "Img/" + String(row["nombre del producto"]).trim()
+          : obtenerImagen(row.Porducto || row.Producto || row.producto)
+      }))
+      .filter((p) => p.area && p.nombre && p.puntos > 0);
+  }
+
+  function renderProductos() {
+    const cont = document.getElementById('productos');
+
+    if (!productos.length) {
+      cont.innerHTML = '<div class="empty">Cargando catálogo...</div>';
+      return;
     }
 
-    // AQUÍ ESTÁN TODAS TUS REGLAS DE IMÁGENES COMPLETAS
-    function obtenerImagen(nombreProducto) {
-        const n = limpiarNombre(nombreProducto);
-        const mapa = [
-            { terms: ['morral', 'xtech', '209'], img: 'Img/morral-xtech-xtb-209.jpg' },
-            { terms: ['secador', 'gama', 'helios'], img: 'Img/secador-gama-helios.jpg' },
-            { terms: ['audifonos', 'xtech', 'tws'], img: 'Img/audifonos-xtech-tws.jpg' },
-            { terms: ['combo', 'universal', 'plancha', 'waflera'], img: 'Img/combo-universal-plancha-waflera.jpg' },
-            { terms: ['tostadora'], img: 'Img/tostadora.jpg' },
-            { terms: ['vajilla', 'corona', 'dinka'], img: 'Img/vajilla-corona-dinka.jpg' },
-            { terms: ['combo', 'electrolux', 'cafetera', 'ecm30'], img: 'Img/combo-electrolux-cafetera-exprimidor.jpg' },
-            { terms: ['combo', 'electrolux', 'cafetera', 'ecm25'], img: 'Img/combo-electrolux-cafetera-plancha.jpg' },
-            { terms: ['combo', 'electrolux', 'olla', 'ecc20'], img: 'Img/combo-electrolux-olla-hervidor.jpg' },
-            { terms: ['combo', 'imusa', 'arrocera', 'procesador'], img: 'Img/combo-imusa-arrocera-procesador.jpg' },
-            { terms: ['combo', 'oster', 'freidora', 'sanduchera'], img: 'Img/combo-oster-freidora-sanduchera.jpg' },
-            { terms: ['combo', 'universal', 'licuadora', 'sanduchera'], img: 'Img/combo-universal-licuadora-sanduchera-olla.jpg' },
-            { terms: ['audifonos', 'panasonic'], img: 'Img/audifonos-panasonic.jpg' },
-            { terms: ['audifonos', 'esenses'], img: 'Img/audifonos-esenses.jpg' },
-            { terms: ['mouse', 'esenses', 'inalambrico'], img: 'Img/mouse-esenses-inalambrico.jpg' },
-            { terms: ['mouse', 'esenses', 'alambrico'], img: 'Img/mouse-esenses-cable.jpg' },
-            { terms: ['reloj', 'esenses'], img: 'Img/reloj-esenses-audifonos.jpg' },
-            { terms: ['set', 'lanzadores'], img: 'Img/set-lanzadores.jpg' },
-            { terms: ['juego', 'tio', 'rico'], img: 'Img/juego-tio-rico.jpg' },
-            { terms: ['aspiradora', 'simoniz'], img: 'Img/aspiradora-simoniz.jpg' },
-            { terms: ['celular', 'kalley'], img: 'Img/celular-kalley.jpg' },
-            { terms: ['juego', 'uno'], img: 'Img/juego-uno.jpg' },
-            { terms: ['juego', 'stop'], img: 'Img/juego-stop.jpg' },
-            { terms: ['bicicleta', 'balance'], img: 'Img/bicicleta-balance-cheerway.jpg' },
-            { terms: ['monitor', 'kalley'], img: 'Img/monitor-kalley-22.jpg' },
-            { terms: ['rueda', 'abdominal'], img: 'Img/rueda-abdominal.jpg' },
-            { terms: ['cafetera', 'kalley'], img: 'Img/cafetera-kalley.jpg' },
-            { terms: ['sarten', 'free', 'home'], img: 'Img/sarten-free-home.jpg' },
-            { terms: ['spotify'], img: 'Img/spotify-1-mes.jpg' },
-            { terms: ['tarjeta', 'sodexo'], img: 'Img/tarjeta-sodexo.jpg' },
-            { terms: ['tarjeta', 'sodexho'], img: 'Img/tarjeta-sodexo.jpg' }
-        ];
-        for (const item of mapa) {
-            if (item.terms.every(t => n.includes(t))) return item.img;
+    const areaActual = asesorActual ? normalizarArea(asesorActual.area) : '';
+    let productosFiltrados = productos;
+
+    if (areaActual) {
+      productosFiltrados = productos.filter((p) => normalizarArea(p.area) === areaActual);
+    }
+
+    if (!productosFiltrados.length) {
+      cont.innerHTML = '<div class="empty">No hay productos configurados para esta área todavía.</div>';
+      return;
+    }
+
+    if (asesorActual) {
+      const minPuntosArea = Math.min(...productosFiltrados.map((p) => p.puntos));
+      const puedeRedimirAlgo = productosFiltrados.some((p) => asesorActual.puntos >= p.puntos);
+
+      if (!puedeRedimirAlgo) {
+        cont.innerHTML = `
+          <div class="empty">
+            Aún no tienes puntos suficientes para redimir productos de tu área.<br><br>
+            <strong>Para redimir requieres mínimo ${format(minPuntosArea)} puntos.</strong>
+          </div>
+        `;
+        return;
+      }
+
+      productosFiltrados = productosFiltrados.sort((a, b) => {
+        const aPuede = asesorActual.puntos >= a.puntos ? 1 : 0;
+        const bPuede = asesorActual.puntos >= b.puntos ? 1 : 0;
+
+        if (aPuede !== bPuede) {
+          return bPuede - aPuede;
         }
-        return 'Img/producto-base.jpg';
+
+        return a.puntos - b.puntos;
+      });
+    } else {
+      productosFiltrados = productosFiltrados.sort((a, b) => a.puntos - b.puntos);
     }
 
-    function cargarCatalogo(rows) {
-        productos = rows.map(row => ({
-            area: normalizarTexto(row.Area || row.area),
-            nombre: normalizarTexto(row.Producto || row.Porducto || row.producto),
-            puntos: parseFloat(row['Puntos Requeridos'] || row.Puntos || 0),
-            img: row["nombre del producto"] ? "Img/" + String(row["nombre del producto"]).trim() : obtenerImagen(row.Producto || row.Porducto || row.producto)
-        })).filter(p => p.nombre && p.puntos > 0);
-    }
+    cont.innerHTML = productosFiltrados.map((p) => {
+      let estado = '<span class="status no">Ingresa tu cédula para validar</span>';
 
-    function renderProductos() {
-        const cont = document.getElementById('productos');
-        const areaA = asesorActual ? asesorActual.area.toUpperCase() : '';
-        const filtrados = areaA ? productos.filter(p => p.area.toUpperCase() === areaA) : productos;
-        cont.innerHTML = filtrados.map(p => `
-            <div class="card">
-                <img src="${p.img}" onerror="this.src='Img/producto-base.jpg'">
-                <div class="card-body">
-                    <h3>${p.nombre}</h3>
-                    <div class="points">${format(p.puntos)} pts</div>
-                    ${asesorActual ? (asesorActual.puntos >= p.puntos ? '<div class="status ok">✅ Disponible</div>' : `<div class="status no">Faltan ${format(p.puntos - asesorActual.puntos)} pts</div>`) : ''}
-                </div>
-            </div>`).join('');
-    }
-
-    function buscar() {
-        const val = normalizarTexto(document.getElementById('cedulaInput').value);
-        const res = document.getElementById('resultado');
-        asesorActual = asesores.find(a => a.cedula === val);
-        if (asesorActual) {
-            res.style.display = 'block';
-            res.innerHTML = `
-                <div class="result-name">${asesorActual.nombre}</div>
-                <div class="result-points">${format(asesorActual.puntos)} Puntos</div>
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-label">Área</div><div class="stat-value">${asesorActual.area}</div></div>
-                    <div class="stat-card"><div class="stat-label">Líder</div><div class="stat-value">${asesorActual.lider}</div></div>
-                </div>`;
+      if (asesorActual) {
+        if (asesorActual.puntos >= p.puntos) {
+          estado = '<span class="status ok">✅ Disponible para redimir</span>';
         } else {
-            res.style.display = 'block';
-            res.innerHTML = '<p style="color:red">Cédula no encontrada.</p>';
-            asesorActual = null;
+          estado = '<span class="status no">Te faltan ' + format(p.puntos - asesorActual.puntos) + ' pts</span>';
         }
-        renderProductos();
+      }
+
+      return `
+        <div class="card">
+          <img src="${p.img}" alt="${p.nombre}" onerror="this.onerror=null;this.src='Img/producto-base.jpg';" />
+          <div class="card-body">
+            <h3 class="product-title">${p.nombre}</h3>
+            <div class="points">${format(p.puntos)} pts</div>
+            ${estado}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function buscar() {
+    const cedulaDigitada = document.getElementById('cedulaInput').value.trim();
+    const box = document.getElementById('resultado');
+
+    if (!cedulaDigitada) {
+      asesorActual = null;
+      box.style.display = 'block';
+      box.innerHTML = '<div class="empty">Por favor, ingresa un número de cédula.</div>';
+      renderProductos();
+      return;
     }
 
-    async function init() {
-        try {
-            const respA = await fetch(ARCHIVO_ASESORES);
-            const dataA = await respA.arrayBuffer();
-            agruparAsesores(XLSX.utils.sheet_to_json(XLSX.read(dataA, {type:'array'}).Sheets[0]));
-            const respC = await fetch(ARCHIVO_CATALOGO);
-            const dataC = await respC.arrayBuffer();
-            cargarCatalogo(XLSX.utils.sheet_to_json(XLSX.read(dataC, {type:'array'}).Sheets[0]));
-            document.getElementById('estadoCarga').textContent = '✅ Sistema listo';
-            renderProductos();
-        } catch (e) {
-            document.getElementById('estadoCarga').textContent = '❌ Error al cargar archivos';
-        }
+    // Buscamos al asesor por su cédula
+    asesorActual = asesores.find((a) => a.cedula === cedulaDigitada);
+
+    if (asesorActual) {
+      box.style.display = 'block';
+      box.innerHTML = `
+        <div class="result-name">${asesorActual.nombre}</div>
+        <div class="result-points">Puntos acumulados: ${format(asesorActual.puntos)}</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Área</div>
+            <div class="stat-value">${asesorActual.area || 'No disponible'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Líder</div>
+            <div class="stat-value">${asesorActual.lider || 'No disponible'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Cohorte</div>
+            <div class="stat-value">${asesorActual.cohorte || 'No disponible'}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Registros acumulados</div>
+            <div class="stat-value">${asesorActual.registros}</div>
+          </div>
+        </div>
+      `;
+    } else {
+      asesorActual = null;
+      box.style.display = 'block';
+      box.innerHTML = '<div class="empty" style="color: var(--danger);">No encontramos información para la cédula ingresada.</div>';
     }
 
-    document.getElementById('btnConsultar').addEventListener('click', buscar);
-    init();
+    renderProductos();
+  }
+
+  async function cargarArchivoExcel(ruta) {
+    const response = await fetch(ruta);
+    if (!response.ok) {
+      throw new Error('No se pudo cargar: ' + ruta);
+    }
+
+    const data = await response.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+  }
+
+  async function cargarDatosIniciales() {
+    const estado = document.getElementById('estadoCarga');
+
+    try {
+      estado.style.color = '#64748b';
+      estado.textContent = 'Cargando asesores...';
+      const rowsAsesores = await cargarArchivoExcel(ARCHIVO_ASESORES);
+      agruparAsesores(rowsAsesores);
+
+      estado.textContent = 'Cargando catálogo...';
+      const rowsCatalogo = await cargarArchivoExcel(ARCHIVO_CATALOGO);
+      cargarCatalogo(rowsCatalogo);
+
+      estado.style.color = '#16a34a';
+      estado.textContent = 'Información cargada correctamente.';
+      renderProductos();
+    } catch (error) {
+      console.error(error);
+      estado.style.color = '#dc2626';
+      estado.textContent = 'No se pudo cargar la información. Verifica que los archivos estén en el repositorio.';
+    }
+  }
+
+  document.getElementById('btnConsultar').addEventListener('click', buscar);
+  
+  // Opcional: Buscar también al presionar "Enter" en el input
+  document.getElementById('cedulaInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      buscar();
+    }
+  });
+
+  renderProductos();
+  cargarDatosIniciales();
 </script>
 </body>
 </html>
