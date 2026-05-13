@@ -100,7 +100,7 @@
       letter-spacing: 0.05em;
     }
 
-    button, select {
+    button, input {
       width: 100%;
       border-radius: 14px;
       border: 1px solid var(--border);
@@ -108,9 +108,10 @@
       font-size: 15px;
     }
 
-    select {
+    input {
       background: #fff;
       color: var(--text);
+      outline-color: var(--primary-2);
     }
 
     button {
@@ -121,6 +122,10 @@
       cursor: pointer;
       margin-top: 14px;
       box-shadow: 0 10px 22px rgba(0, 43, 127, 0.18);
+    }
+
+    button:hover {
+        opacity: 0.9;
     }
 
     #estadoCarga {
@@ -288,14 +293,13 @@
   <div class="layout">
     <aside class="box sidebar">
       <h2 class="section-title">Consulta de puntos</h2>
-      <p class="section-subtitle">Selecciona tu nombre para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
+      <p class="section-subtitle">Ingresa el No de tu cc para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
 
       <p id="estadoCarga">Cargando información...</p>
 
-      <label for="asesorSelect" class="mini-label">Selecciona el asesor</label>
-      <select id="asesorSelect">
-        <option value="">-- Selecciona un asesor --</option>
-      </select>
+      <label for="cedulaInput" class="mini-label">Número de Cédula</label>
+      <!-- Cambiamos el select por un input de texto -->
+      <input type="number" id="cedulaInput" placeholder="Escribe tu cédula aquí...">
 
       <button id="btnConsultar" type="button">Consultar puntos</button>
 
@@ -362,20 +366,8 @@
     }).format(Number(valor || 0));
   }
 
-  function cargarDropdown() {
-    const select = document.getElementById('asesorSelect');
-    select.innerHTML = '<option value="">-- Selecciona un asesor --</option>';
-
-    asesores
-      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
-      .forEach((asesor) => {
-        const option = document.createElement('option');
-        option.value = asesor.nombre;
-        option.textContent = asesor.nombre;
-        select.appendChild(option);
-      });
-  }
-
+  // Ya no necesitamos cargarDropdown ya que no hay select,
+  // pero mantendremos la lógica de agrupación buscando la cédula.
   function agruparAsesores(rows) {
     const mapa = new Map();
 
@@ -383,13 +375,22 @@
       const nombreAsesor = normalizarTexto(
         row.Asesor || row.asesor || row.NOMBRE_ASESOR || row.nombre_asesor
       );
+      
+      // Intentamos obtener la cédula de varias posibles columnas
+      const cedulaAsesor = normalizarTexto(
+        row.Cedula || row.cedula || row.CC || row.Documento || row.DOCUMENTO || row.id
+      );
 
       if (!nombreAsesor) return;
 
       const puntos = Math.round(Number(row.PUNTOS || 0));
 
-      const actual = mapa.get(nombreAsesor) || {
+      // Usamos la cédula como llave o el nombre si no hay cédula
+      const llave = cedulaAsesor || nombreAsesor;
+
+      const actual = mapa.get(llave) || {
         nombre: nombreAsesor,
+        cedula: cedulaAsesor,
         lider: row.Lider || row.lider || '',
         area: row.Area || row['Área'] || row.area || '',
         cohorte: row.Cohorte || row.cohorte || '',
@@ -404,11 +405,10 @@
       if (!actual.area && (row.Area || row['Área'] || row.area)) actual.area = row.Area || row['Área'] || row.area;
       if (!actual.cohorte && (row.Cohorte || row.cohorte)) actual.cohorte = row.Cohorte || row.cohorte;
 
-      mapa.set(nombreAsesor, actual);
+      mapa.set(llave, actual);
     });
 
     asesores = Array.from(mapa.values());
-    cargarDropdown();
   }
 
   function obtenerImagen(nombreProducto) {
@@ -519,7 +519,7 @@
     }
 
     cont.innerHTML = productosFiltrados.map((p) => {
-      let estado = '<span class="status no">Consulta un asesor para validar</span>';
+      let estado = '<span class="status no">Ingresa tu cédula para validar</span>';
 
       if (asesorActual) {
         if (asesorActual.puntos >= p.puntos) {
@@ -543,18 +543,19 @@
   }
 
   function buscar() {
-    const nombreSeleccionado = document.getElementById('asesorSelect').value;
+    const cedulaDigitada = document.getElementById('cedulaInput').value.trim();
     const box = document.getElementById('resultado');
 
-    if (!nombreSeleccionado) {
+    if (!cedulaDigitada) {
       asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty">Selecciona un asesor de la lista para ver el consolidado de puntos.</div>';
+      box.innerHTML = '<div class="empty">Por favor, ingresa un número de cédula.</div>';
       renderProductos();
       return;
     }
 
-    asesorActual = asesores.find((a) => a.nombre === nombreSeleccionado);
+    // Buscamos al asesor por su cédula
+    asesorActual = asesores.find((a) => a.cedula === cedulaDigitada);
 
     if (asesorActual) {
       box.style.display = 'block';
@@ -581,8 +582,9 @@
         </div>
       `;
     } else {
+      asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty">No encontramos información para ese asesor.</div>';
+      box.innerHTML = '<div class="empty" style="color: var(--danger);">No encontramos información para la cédula ingresada.</div>';
     }
 
     renderProductos();
@@ -624,6 +626,13 @@
   }
 
   document.getElementById('btnConsultar').addEventListener('click', buscar);
+  
+  // Opcional: Buscar también al presionar "Enter" en el input
+  document.getElementById('cedulaInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      buscar();
+    }
+  });
 
   renderProductos();
   cargarDatosIniciales();
