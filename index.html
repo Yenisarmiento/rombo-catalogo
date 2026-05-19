@@ -100,7 +100,7 @@
       letter-spacing: 0.05em;
     }
 
-    button, select {
+    button, select, input {
       width: 100%;
       border-radius: 14px;
       border: 1px solid var(--border);
@@ -108,7 +108,7 @@
       font-size: 15px;
     }
 
-    select {
+    select, input {
       background: #fff;
       color: var(--text);
     }
@@ -288,16 +288,20 @@
   <div class="layout">
     <aside class="box sidebar">
       <h2 class="section-title">Consulta de puntos</h2>
-      <p class="section-subtitle">Selecciona tu nombre para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
+      <p class="section-subtitle">Escribe tu número de CC para consultar tus puntos acumulados y revisar los productos que puedes redimir.</p>
 
       <p id="estadoCarga">Cargando información...</p>
 
-      <label for="asesorSelect" class="mini-label">Selecciona el asesor</label>
-      <select id="asesorSelect">
-        <option value="">-- Selecciona un asesor --</option>
-      </select>
+      <label for="asesorCC" class="mini-label">Número de CC</label>
+      <input
+        type="text"
+        id="asesorCC"
+        placeholder="Escribe tu número de CC"
+        inputmode="numeric"
+        autocomplete="off"
+      />
 
-      <button id="btnConsultar" type="button">Consultar puntos</button>
+      <button id="btnConsultar" type="button">Buscar puntos</button>
 
       <div id="resultado"></div>
     </aside>
@@ -322,6 +326,33 @@
 
   function normalizarTexto(v) {
     return String(v || '').trim();
+  }
+
+  function normalizarDocumento(v) {
+    return String(v || '').replace(/\D/g, '').trim();
+  }
+
+  function obtenerCampo(row, campos) {
+    for (const campo of campos) {
+      if (Object.prototype.hasOwnProperty.call(row, campo) && row[campo] !== '') {
+        return row[campo];
+      }
+    }
+    return '';
+  }
+
+  function formatearCohorte(v) {
+    const texto = normalizarTexto(v);
+    if (!texto) return '';
+
+    const numero = texto.match(/\d+/);
+    if (numero) return 'Cohorte ' + numero[0];
+
+    if (/^cohorte/i.test(texto)) {
+      return texto.replace(/^cohorte\s*/i, 'Cohorte ');
+    }
+
+    return texto;
   }
 
   function normalizarArea(v) {
@@ -360,17 +391,8 @@
   }
 
   function cargarDropdown() {
-    const select = document.getElementById('asesorSelect');
-    select.innerHTML = '<option value="">-- Selecciona un asesor --</option>';
-
-    asesores
-      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
-      .forEach((asesor) => {
-        const option = document.createElement('option');
-        option.value = asesor.nombre;
-        option.textContent = asesor.nombre;
-        select.appendChild(option);
-      });
+    const input = document.getElementById('asesorCC');
+    if (input) input.value = '';
   }
 
   function agruparAsesores(rows) {
@@ -378,18 +400,33 @@
 
     rows.forEach((row) => {
       const nombreAsesor = normalizarTexto(
-        row.Asesor || row.asesor || row.NOMBRE_ASESOR || row.nombre_asesor
+        obtenerCampo(row, ['Asesor', 'asesor', 'NOMBRE_ASESOR', 'nombre_asesor', 'Nombre', 'nombre'])
       );
 
-      if (!nombreAsesor) return;
+      const cedulaAsesor = normalizarDocumento(
+        obtenerCampo(row, [
+          'CC', 'Cc', 'cc',
+          'Cédula', 'Cedula', 'cédula', 'cedula', 'CEDULA',
+          'Documento', 'documento', 'DOCUMENTO',
+          'Identificación', 'Identificacion', 'identificación', 'identificacion', 'IDENTIFICACION',
+          'Número de CC', 'Numero de CC', 'numero de cc', 'N° CC', 'No CC', 'No. CC',
+          'Número documento', 'Numero documento', 'Número de documento', 'Numero de documento'
+        ])
+      );
 
-      const puntos = Number(row.PUNTOS || 0);
+      if (!nombreAsesor && !cedulaAsesor) return;
 
-      const actual = mapa.get(nombreAsesor) || {
+      const clave = cedulaAsesor || nombreAsesor;
+      const puntos = Number(row.PUNTOS || row.Puntos || row.puntos || 0);
+      const cohorteFila = formatearCohorte(row.Cohorte || row.cohorte || row.COHORTE || '');
+
+      const actual = mapa.get(clave) || {
         nombre: nombreAsesor,
+        cedula: cedulaAsesor,
         lider: row.Lider || row.lider || '',
         area: row.Area || row['Área'] || row.area || '',
-        cohorte: row.Cohorte || row.cohorte || '',
+        cohortes: new Set(),
+        cohorte: '',
         puntos: 0,
         registros: 0
       };
@@ -397,11 +434,17 @@
       actual.puntos += isNaN(puntos) ? 0 : puntos;
       actual.registros += 1;
 
+      if (!actual.nombre && nombreAsesor) actual.nombre = nombreAsesor;
+      if (!actual.cedula && cedulaAsesor) actual.cedula = cedulaAsesor;
       if (!actual.lider && (row.Lider || row.lider)) actual.lider = row.Lider || row.lider;
       if (!actual.area && (row.Area || row['Área'] || row.area)) actual.area = row.Area || row['Área'] || row.area;
-      if (!actual.cohorte && (row.Cohorte || row.cohorte)) actual.cohorte = row.Cohorte || row.cohorte;
+      if (cohorteFila) actual.cohortes.add(cohorteFila);
 
-      mapa.set(nombreAsesor, actual);
+      actual.cohorte = Array.from(actual.cohortes)
+        .sort((a, b) => a.localeCompare(b, 'es', { numeric: true }))
+        .join(' y ');
+
+      mapa.set(clave, actual);
     });
 
     asesores = Array.from(mapa.values());
@@ -487,6 +530,19 @@
       return;
     }
 
+    productosFiltrados = productosFiltrados.slice().sort((a, b) => {
+      if (asesorActual) {
+        const aDisponible = asesorActual.puntos >= a.puntos;
+        const bDisponible = asesorActual.puntos >= b.puntos;
+
+        if (aDisponible !== bDisponible) {
+          return aDisponible ? -1 : 1;
+        }
+      }
+
+      return a.puntos - b.puntos || a.nombre.localeCompare(b.nombre, 'es');
+    });
+
     cont.innerHTML = productosFiltrados.map((p) => {
       let estado = '<span class="status no">Consulta un asesor para validar</span>';
 
@@ -512,32 +568,28 @@
   }
 
   function buscar() {
-    const nombreSeleccionado = document.getElementById('asesorSelect').value;
+    const ccDigitada = normalizarDocumento(document.getElementById('asesorCC').value);
     const box = document.getElementById('resultado');
 
-    if (!nombreSeleccionado) {
+    if (!ccDigitada) {
       asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty">Selecciona un asesor de la lista para ver el consolidado de puntos.</div>';
+      box.innerHTML = '<div class="empty">Escribe tu número de CC para ver el consolidado de puntos.</div>';
       renderProductos();
       return;
     }
 
-    asesorActual = asesores.find((a) => a.nombre === nombreSeleccionado);
+    asesorActual = asesores.find((a) => normalizarDocumento(a.cedula) === ccDigitada);
 
     if (asesorActual) {
       box.style.display = 'block';
       box.innerHTML = `
-        <div class="result-name">${asesorActual.nombre}</div>
+        <div class="result-name">${asesorActual.nombre || 'Asesor encontrado'}</div>
         <div class="result-points">Puntos acumulados: ${format(asesorActual.puntos)}</div>
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-label">Área</div>
             <div class="stat-value">${asesorActual.area || 'No disponible'}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Líder</div>
-            <div class="stat-value">${asesorActual.lider || 'No disponible'}</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Cohorte</div>
@@ -550,8 +602,9 @@
         </div>
       `;
     } else {
+      asesorActual = null;
       box.style.display = 'block';
-      box.innerHTML = '<div class="empty">No encontramos información para ese asesor.</div>';
+      box.innerHTML = '<div class="empty">No encontramos información asociada a ese número de CC. Verifica el número e intenta nuevamente.</div>';
     }
 
     renderProductos();
@@ -593,6 +646,12 @@
   }
 
   document.getElementById('btnConsultar').addEventListener('click', buscar);
+  document.getElementById('asesorCC').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      buscar();
+    }
+  });
 
   renderProductos();
   cargarDatosIniciales();
