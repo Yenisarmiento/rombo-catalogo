@@ -403,7 +403,11 @@
         obtenerCampo(row, ['Asesor', 'asesor', 'NOMBRE_ASESOR', 'nombre_asesor', 'Nombre', 'nombre'])
       );
 
-      const cedulaAsesor = normalizarDocumento(
+      // La cédula oficial para la búsqueda está en la columna T del Excel.
+      // T = columna 20 en Excel = índice 19 en JavaScript.
+      const cedulaColumnaT = normalizarDocumento(row.__COL_T__);
+
+      const cedulaAsesor = cedulaColumnaT || normalizarDocumento(
         obtenerCampo(row, [
           'CC', 'Cc', 'cc',
           'Cédula', 'Cedula', 'cédula', 'cedula', 'CEDULA',
@@ -619,7 +623,20 @@
     const data = await response.arrayBuffer();
     const wb = XLSX.read(data, { type: 'array' });
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+    // Se conserva la lectura normal por encabezados y, adicionalmente,
+    // se guarda el valor real de la columna T para cada fila.
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    const matriz = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+    return rows.map((row, index) => {
+      const filaExcel = typeof row.__rowNum__ === 'number' ? row.__rowNum__ : index + 1;
+      const valoresFila = matriz[filaExcel] || [];
+      return {
+        ...row,
+        __COL_T__: valoresFila[19] || ''
+      };
+    });
   }
 
   async function cargarDatosIniciales() {
