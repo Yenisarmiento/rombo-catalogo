@@ -357,13 +357,86 @@
 
   function normalizarArea(v) {
     return String(v || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .trim()
       .toUpperCase()
-      .replace(/Á/g, 'A')
-      .replace(/É/g, 'E')
-      .replace(/Í/g, 'I')
-      .replace(/Ó/g, 'O')
-      .replace(/Ú/g, 'U');
+      .replace(/&/g, ' Y ')
+      .replace(/[./_-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function areaCanonica(v) {
+    const t = normalizarArea(v);
+
+    if (!t) return '';
+
+    // PREGRADO / PREGRADOS
+    if (
+      t.includes('PREGRADO') ||
+      t.includes('PREGRADOS') ||
+      t.includes('PRE GRADO') ||
+      t.includes('PRE GRADOS')
+    ) {
+      return 'PREGRADO';
+    }
+
+    // POSGRADOS / MAESTRÍAS / ESPECIALIZACIONES
+    if (
+      t.includes('POSGRADO') ||
+      t.includes('POSGRADOS') ||
+      t.includes('POSTGRADO') ||
+      t.includes('POSTGRADOS') ||
+      t.includes('MAESTRIA') ||
+      t.includes('MAESTRIAS') ||
+      t.includes('ESPECIALIZACION') ||
+      t.includes('ESPECIALIZACIONES')
+    ) {
+      return 'POSGRADO';
+    }
+
+    // EDUCACIÓN CONTINUA / DIPLOMADOS / CURSOS
+    if (
+      t.includes('EDUCACION CONTINUA') ||
+      t.includes('ED CONTINUA') ||
+      t.includes('CONTINUA') ||
+      t.includes('DIPLOMADO') ||
+      t.includes('DIPLOMADOS') ||
+      t.includes('CURSO') ||
+      t.includes('CURSOS')
+    ) {
+      return 'EDUCACION CONTINUA';
+    }
+
+    // REINTEGROS / REINGRESOS
+    if (
+      t.includes('REINTEGRO') ||
+      t.includes('REINTEGROS') ||
+      t.includes('REINGRESO') ||
+      t.includes('REINGRESOS')
+    ) {
+      return 'REINGRESOS';
+    }
+
+    // BIT / BOOTCAMPS
+    if (
+      t.includes('BIT') ||
+      t.includes('BOOTCAMP') ||
+      t.includes('BOOTCAMPS')
+    ) {
+      return 'BIT';
+    }
+
+    // INGLÉS
+    if (
+      t.includes('INGLES') ||
+      t.includes('ENGLISH')
+    ) {
+      return 'INGLES';
+    }
+
+    return t;
   }
 
   function limpiarNombre(v) {
@@ -502,16 +575,22 @@
 
   function cargarCatalogo(rows) {
     productos = rows
-      .map((row) => ({
-        area: normalizarTexto(row.Area || row.area),
-        nombre: normalizarTexto(row.Porducto || row.Producto || row.producto),
-        puntos: Number(row['Puntos Requeridos'] || row.Puntos || row.puntos || 0),
-        urlCompra: normalizarTexto(row['url para compra'] || row.url || ''),
-        img: row["nombre del producto"] && String(row["nombre del producto"]).trim() !== ''
-          ? "Img/" + String(row["nombre del producto"]).trim()
-          : obtenerImagen(row.Porducto || row.Producto || row.producto)
-      }))
-      .filter((p) => p.area && p.nombre && p.puntos > 0);
+      .map((row) => {
+        const areaOriginal = normalizarTexto(row.Area || row.area || row['Área'] || row.AREA);
+        const nombreProducto = normalizarTexto(row.Porducto || row.Producto || row.producto);
+
+        return {
+          area: areaOriginal,
+          areaKey: areaCanonica(areaOriginal),
+          nombre: nombreProducto,
+          puntos: Number(row['Puntos Requeridos'] || row.Puntos || row.puntos || 0),
+          urlCompra: normalizarTexto(row['url para compra'] || row.url || ''),
+          img: row["nombre del producto"] && String(row["nombre del producto"]).trim() !== ''
+            ? "Img/" + String(row["nombre del producto"]).trim()
+            : obtenerImagen(nombreProducto)
+        };
+      })
+      .filter((p) => p.areaKey && p.nombre && p.puntos > 0);
   }
 
   function renderProductos() {
@@ -522,11 +601,11 @@
       return;
     }
 
-    const areaActual = asesorActual ? normalizarArea(asesorActual.area) : '';
+    const areaActual = asesorActual ? areaCanonica(asesorActual.area) : '';
     let productosFiltrados = productos;
 
     if (areaActual) {
-      productosFiltrados = productos.filter((p) => normalizarArea(p.area) === areaActual);
+      productosFiltrados = productos.filter((p) => p.areaKey === areaActual);
     }
 
     if (!productosFiltrados.length) {
